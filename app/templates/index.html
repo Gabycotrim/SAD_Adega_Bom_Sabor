@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SAD | Adega Bom Sabor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">ABS</div>
+    <div>
+      <p class="sobretitulo">SISTEMA DE APOIO À DECISÃO</p>
+      <h1>Adega Bom Sabor</h1>
+      <p class="subtitulo">Priorização de estoque e reposição</p>
+    </div>
+  </header>
+  <main class="container">
+    <section class="boas-vindas">
+      <span class="etiqueta">PROVA DE CONCEITO</span>
+      <h2>Decisões de estoque baseadas em dados</h2>
+      <p>Esta é a estrutura inicial da aplicação. O próximo passo é validar a base de dados e, em seguida, implementar os critérios e as recomendações do SAD.</p>
+    </section>
+    <section class="cartoes">
+      <article class="cartao"><h3>Fontes</h3><p>Produtos, estoque e histórico de compras.</p></article>
+      <article class="cartao"><h3>Processamento</h3><p>Validação, integração e cálculo dos indicadores.</p></article>
+      <article class="cartao"><h3>Apoio à decisão</h3><p>Priorização explicável com critérios ajustáveis.</p></article>
+    </section>
+    <section class="aviso">
+      <strong>Estado atual:</strong> interface inicial — mecanismo de decisão ainda não implementado.
+    </section>
+  </main>
+  <footer>Projeto acadêmico • Sistemas de Apoio à Decisão</footer>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

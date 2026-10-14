@@ -1,0 +1,17 @@
+# Ambiente virtual e Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Segredos e configurações locais
+.env
+
+# Saídas temporárias
+.pytest_cache/
+.coverage
+data/processed/*
+!data/processed/.gitkeep
+
+# Logs
+*.log
