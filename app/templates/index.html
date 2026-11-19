@@ -1,36 +1,247 @@
+
 <!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SAD | Adega Bom Sabor</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
+
   <header class="topo">
     <div class="marca">ABS</div>
+
     <div>
       <p class="sobretitulo">SISTEMA DE APOIO À DECISÃO</p>
       <h1>Adega Bom Sabor</h1>
-      <p class="subtitulo">Priorização de estoque e reposição</p>
+      <p class="subtitulo">
+        Priorização inteligente de estoque e reposição
+      </p>
     </div>
   </header>
+
   <main class="container">
+
     <section class="boas-vindas">
       <span class="etiqueta">PROVA DE CONCEITO</span>
+
       <h2>Decisões de estoque baseadas em dados</h2>
-      <p>Esta é a estrutura inicial da aplicação. O próximo passo é validar a base de dados e, em seguida, implementar os critérios e as recomendações do SAD.</p>
+
+      <p>
+        Painel de apoio à gestão de estoque, com análise de vendas,
+        identificação de riscos e recomendações de reposição.
+      </p>
     </section>
-    <section class="cartoes">
-      <article class="cartao"><h3>Fontes</h3><p>Produtos, estoque e histórico de compras.</p></article>
-      <article class="cartao"><h3>Processamento</h3><p>Validação, integração e cálculo dos indicadores.</p></article>
-      <article class="cartao"><h3>Apoio à decisão</h3><p>Priorização explicável com critérios ajustáveis.</p></article>
+
+    <!-- INDICADORES -->
+
+    <section class="indicadores">
+
+      <article class="indicador">
+        <span>Total de produtos</span>
+        <strong>{{ indicadores.total_produtos }}</strong>
+      </article>
+
+      <article class="indicador indicador-clicavel"
+         data-filtrar-prioridade="Prioridade alta"
+         role="button"
+         tabindex="0"
+         title="Clique para filtrar produtos com prioridade alta">
+        <span>Prioridade alta</span>
+        <strong>{{ indicadores.prioridade_alta }}</strong>
+      </article>
+
+      <article class="indicador indicador-clicavel"
+         data-filtrar-prioridade="Prioridade moderada"
+         role="button"
+         tabindex="0"
+         title="Clique para filtrar produtos com prioridade moderada">
+        <span>Prioridade moderada</span>
+        <strong>{{ indicadores.prioridade_moderada }}</strong>
+      </article>
+
+      <article class="indicador indicador-clicavel"
+         data-filtrar-prioridade="Prioridade baixa"
+         role="button"
+         tabindex="0"
+         title="Clique para filtrar produtos com prioridade baixa">
+        <span>Prioridade baixa</span>
+        <strong>{{ indicadores.prioridade_baixa }}</strong>
+      </article>
+
+      <article class="indicador indicador-clicavel"
+         data-filtrar-perfil="Reposição urgente"
+         role="button"
+         tabindex="0"
+         title="Clique para consultar produtos com reposição urgente">
+        <span>Reposição urgente</span>
+        <strong>{{ indicadores.reposicao_urgente }}</strong>
+      </article>
+
+      <article class="indicador indicador-clicavel"
+         data-filtrar-perfil="Investigar demanda"
+         role="button"
+         tabindex="0"
+         title="Clique para consultar produtos que exigem investigação da demanda">
+        <span>Investigar demanda</span>
+        <strong>{{ indicadores.investigar_demanda }}</strong>
+      </article>
+
+      <article class="indicador indicador-clicavel"
+         data-filtrar-perfil="Suspender reposição"
+         role="button"
+         tabindex="0"
+         title="Clique para consultar produtos com reposição suspensa">
+        <span>Suspender reposição</span>
+        <strong>{{ indicadores.suspender_reposicao }}</strong>
+      </article>
     </section>
+
+    <!-- GRÁFICO -->
+
+    <section class="painel">
+      <h2>Distribuição dos perfis de decisão</h2>
+
+      <div class="grafico-container">
+        <canvas id="graficoPerfis"></canvas>
+      </div>
+    </section>
+
+    <!-- CONSULTA DE PRODUTOS -->
+
+    <section class="painel">
+
+            <div class="cabecalho-painel">
+        <div>
+          <h2>Análise de produtos</h2>
+          <p>Consulte as recomendações geradas pelo SAD.</p>
+        </div>
+
+        <a href="{{ url_for('comparativo') }}" class="botao-comparativo">
+          📊 Comparativo de produtos
+        </a>
+      </div>
+
+      <div class="filtros">
+
+        <input
+          type="text"
+          id="buscaProduto"
+          placeholder="Pesquisar produto ou código..."
+        >
+
+        <select id="filtroPrioridade">
+          <option value="">Todas as prioridades</option>
+          <option value="Prioridade alta">Prioridade alta</option>
+          <option value="Prioridade moderada">Prioridade moderada</option>
+          <option value="Prioridade baixa">Prioridade baixa</option>
+        </select>
+
+        <select id="filtroPerfil">
+          <option value="">Todos os perfis</option>
+
+          {% for perfil in produtos | map(attribute='perfil_decisao') | unique | sort %}
+            <option value="{{ perfil }}">{{ perfil }}</option>
+          {% endfor %}
+        </select>
+
+      </div>
+
+      <div class="tabela-container">
+
+        <table id="tabelaProdutos">
+
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Produto</th>
+              <th>Estoque</th>
+              <th>Vendas 90d</th>
+              <th>Pontuação</th>
+              <th>Perfil de decisão</th>
+              <th>Justificativa</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {% for produto in produtos %}
+
+            <tr data-prioridade="{{ produto.classificacao_prioridade }}">
+              <td>
+                <a href="{{ url_for('detalhe_produto', produto_id=produto.produto_id) }}"
+                  style="color: #5a1832; font-weight: bold;">
+                  {{ produto.produto_id }}
+                </a>
+              </td>
+
+              <td>{{ produto.nome_produto }}</td>
+
+              <td>{{ produto.estoque_atual }}</td>
+
+              <td>{{ produto.vendas_90d }}</td>
+
+              <td>
+                {{ "%.1f"|format(produto.pontuacao_prioridade|float) }}
+              </td>
+
+              <td>
+                <span class="perfil">
+                  {{ produto.perfil_decisao }}
+                </span>
+              </td>
+
+              <td>{{ produto.justificativa_prioridade }}</td>
+            </tr>
+
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+
+        <p id="mensagemVazia" hidden>
+          Nenhum produto encontrado.
+        </p>
+
+      </div>
+
+      <p id="contadorProdutos"></p>
+
+    </section>
+
     <section class="aviso">
-      <strong>Estado atual:</strong> interface inicial — mecanismo de decisão ainda não implementado.
+      <strong>Nota metodológica:</strong>
+      as recomendações são geradas por regras de decisão
+      e indicadores calculados a partir da base fornecida.
+      A análise de vendas tem como referência 15/08/2026.
     </section>
+
   </main>
-  <footer>Projeto acadêmico • Sistemas de Apoio à Decisão</footer>
+
+  <footer class="rodape-profissional">
+    <div class="rodape-conteudo">
+        <h3>Adega Bom Sabor</h3>
+        <p>Sistema de Apoio à Decisão • Gestão Inteligente de Estoque</p>
+    </div>
+
+    <div class="rodape-direitos">
+        © 2026 Adega Bom Sabor. Todos os direitos reservados.
+    </div>
+  </footer>
+
+
+  <script id="dadosPerfis" type="application/json">
+    {{ perfis_grafico | tojson }}
+  </script>
+
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
 </body>
 </html>

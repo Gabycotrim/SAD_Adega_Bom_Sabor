@@ -1,0 +1,397 @@
+
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Comparativo de Produtos | Adega Bom Sabor</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <header class="topo">
+
+        <div class="marca">ABS</div>
+
+        <div>
+            <p class="sobretitulo">SISTEMA DE APOIO À DECISÃO</p>
+            <h1>Adega Bom Sabor</h1>
+            <p class="subtitulo">Comparativo de produtos prioritários</p>
+        </div>
+
+    </header>
+
+    <main class="container">
+
+        <p>
+            <a href="{{ url_for('index') }}"
+               style="color: #5a1832; font-weight: bold;">
+                ← Voltar ao dashboard
+            </a>
+        </p>
+
+        <section class="boas-vindas">
+
+            <span class="etiqueta">ANÁLISE COMPARATIVA</span>
+
+            <h2>Produtos com maior índice de prioridade</h2>
+
+            <p>
+                Compare os cinco produtos com maior pontuação
+                no mecanismo de decisão do SAD.
+            </p>
+
+        </section>
+
+
+        <!-- RESUMO COMPARATIVO -->
+
+        <section class="painel">
+
+            <h2>Ranking de prioridade</h2>
+
+            <div class="comparativo-lista">
+
+                {% for produto in produtos %}
+
+                    <article class="cartao-comparativo">
+
+                        <div class="comparativo-cabecalho">
+
+                            <div>
+                                <span class="etiqueta">
+                                    POSIÇÃO {{ loop.index }}
+                                </span>
+
+                                <h3>{{ produto.nome_produto }}</h3>
+
+                                <p>
+                                    Código:
+                                    <strong>{{ produto.produto_id }}</strong>
+                                </p>
+                            </div>
+
+                            <div class="pontuacao-destaque">
+
+                                <strong>
+                                    {{ "%.2f"|format(
+                                        produto.pontuacao_prioridade|float
+                                    ) }}
+                                </strong>
+
+                                <span>pontos</span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="indicadores">
+
+                            <article class="indicador">
+                                <span>Estoque atual</span>
+                                <strong>{{ produto.estoque_atual }}</strong>
+                            </article>
+
+                            <article class="indicador">
+                                <span>Estoque mínimo</span>
+                                <strong>{{ produto.estoque_minimo }}</strong>
+                            </article>
+
+                            <article class="indicador">
+                                <span>Cobertura estimada</span>
+                                <strong>
+                                    {% if produto.cobertura_dias != "" %}
+                                        {{ "%.1f"|format(
+                                            produto.cobertura_dias|float
+                                        ) }} dias
+                                    {% else %}
+                                        Não calculada
+                                    {% endif %}
+                                </strong>
+                            </article>
+
+                            <article class="indicador">
+                                <span>Prazo de reposição</span>
+                                <strong>{{ produto.lead_time_dias }} dias</strong>
+                            </article>
+
+                            <article class="indicador">
+                                <span>Vendas em 30 dias</span>
+                                <strong>{{ produto.vendas_30d }}</strong>
+                            </article>
+
+                            <article class="indicador">
+                                <span>Vendas em 90 dias</span>
+                                <strong>{{ produto.vendas_90d }}</strong>
+                            </article>
+
+                            <article class="indicador">
+                                <span>Tendência</span>
+                                <strong>{{ produto.tendencia_demanda }}</strong>
+                            </article>
+
+                            <article class="indicador">
+                                <span>Margem</span>
+                                <strong>{{ produto.margem_pct }}%</strong>
+                            </article>
+
+                        </div>
+
+
+                        <div class="decisao-comparativa">
+
+                            <p>
+                                <strong>Perfil de decisão:</strong>
+                                {{ produto.perfil_decisao }}
+                            </p>
+
+                            <p>
+                                <strong>Recomendação:</strong>
+                                {{ produto.recomendacao }}
+                            </p>
+
+                            <p>
+                                <strong>Justificativa:</strong>
+                                {{ produto.justificativa_prioridade }}
+                            </p>
+
+                            {% if produto.tendencia_demanda == "Decrescente" %}
+
+                                <p class="alerta-comparativo">
+                                    Atenção: a demanda está em queda.
+                                    Avalie cuidadosamente a quantidade
+                                    antes de realizar a reposição.
+                                </p>
+
+                            {% endif %}
+
+                            <a class="link-detalhes"
+                               href="{{ url_for(
+                                   'detalhe_produto',
+                                   produto_id=produto.produto_id
+                               ) }}">
+                                Ver análise individual →
+                            </a>
+
+                        </div>
+
+                    </article>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+<!-- ======================================================
+     GRÁFICOS COMPARATIVOS DO SAD
+====================================================== -->
+
+    <section class="painel graficos-comparativos">
+
+        <h2>Análise gráfica dos produtos prioritários</h2>
+
+            <p>
+        Comparação dos indicadores dos cinco produtos
+        com maior índice de prioridade.
+        </p>
+
+        <div class="grafico-container">
+
+        <h3>1. Índice de prioridade</h3>
+
+        <canvas id="graficoPrioridade"></canvas>
+
+        </div>
+
+        <div class="grafico-container">
+
+        <h3>2. Comparação das vendas</h3>
+
+        <canvas id="graficoVendas"></canvas>
+
+        </div>
+
+        <div class="grafico-container">
+
+        <h3>3. Cobertura versus prazo de reposição</h3>
+
+        <canvas id="graficoCobertura"></canvas>
+
+        </div>
+
+    </section>
+
+        <section class="aviso">
+
+            <strong>Nota metodológica:</strong>
+
+            <p>
+                O ranking considera a pontuação calculada pelo
+                mecanismo de decisão, em ordem decrescente.
+                Uma pontuação maior representa maior prioridade
+                segundo os critérios definidos no SAD, mas não
+                determina automaticamente a compra.
+            </p>
+
+            <p>
+                A análise de vendas utiliza como referência
+                15/08/2026.
+            </p>
+
+        </section>
+
+    </main>
+
+
+    <footer class="rodape-profissional">
+        <div class="rodape-conteudo">
+            <h3>Adega Bom Sabor</h3>
+            <p>Sistema de Apoio à Decisão • Gestão Inteligente de Estoque</p>
+        </div>
+
+    <div class="rodape-direitos">
+        © 2026 Adega Bom Sabor. Todos os direitos reservados.
+    </div>
+</footer>
+
+
+
+<!-- Bibliotecas dos gráficos -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+<script>
+    const dadosProdutos = {{ dados_grafico | tojson }};
+
+    const nomes = dadosProdutos.map(
+        produto => `#${produto.produto_id}`
+    );
+
+    // Configuração comum dos gráficos
+    Chart.register(ChartDataLabels);
+
+    const configuracaoComum = {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: "top"
+            },
+            datalabels: {
+                anchor: "end",
+                align: "top",
+                color: "#29252a",
+                font: {
+                    weight: "bold",
+                    size: 11
+                },
+                formatter: valor => {
+                    if (valor === null || valor === undefined) {
+                        return "";
+                    }
+
+                    return Number(valor).toFixed(1);
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    };
+
+    // 1. Gráfico de prioridade
+    new Chart(document.getElementById("graficoPrioridade"), {
+        type: "bar",
+        data: {
+            labels: nomes,
+            datasets: [{
+                label: "Pontuação de prioridade",
+                data: dadosProdutos.map(
+                    produto => produto.pontuacao_prioridade
+                ),
+                backgroundColor: "#c9a45c"
+            }]
+        },
+        options: {
+            ...configuracaoComum,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // 2. Gráfico de vendas
+    new Chart(document.getElementById("graficoVendas"), {
+        type: "bar",
+        data: {
+            labels: nomes,
+            datasets: [
+                {
+                    label: "30 dias anteriores",
+                    data: dadosProdutos.map(
+                        produto => produto.vendas_30d_anteriores
+                    ),
+                    backgroundColor: "#8b5268"
+                },
+                {
+                    label: "Últimos 30 dias",
+                    data: dadosProdutos.map(
+                        produto => produto.vendas_30d
+                    ),
+                    backgroundColor: "#c9a45c"
+                }
+            ]
+        },
+        options: configuracaoComum
+    });
+
+    // 3. Gráfico de cobertura e prazo de reposição
+    const coresCobertura = dadosProdutos.map(produto => {
+        const cobertura = Number(produto.cobertura_dias);
+        const prazo = Number(produto.lead_time_dias);
+
+        return cobertura <= prazo
+            ? "#b83245"
+            : "#c9a45c";
+    });
+
+    new Chart(document.getElementById("graficoCobertura"), {
+        type: "bar",
+        data: {
+            labels: nomes,
+            datasets: [
+                {
+                    label: "Cobertura estimada (dias)",
+                    data: dadosProdutos.map(
+                        produto => produto.cobertura_dias
+                    ),
+                    backgroundColor: coresCobertura
+                },
+                {
+                    label: "Prazo de reposição (dias)",
+                    data: dadosProdutos.map(
+                        produto => produto.lead_time_dias
+                    ),
+                    backgroundColor: "#5a1832"
+                }
+            ]
+        },
+        options: configuracaoComum
+    });
+</script>
+
+
+</body>
+</html>

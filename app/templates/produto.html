@@ -1,0 +1,334 @@
+
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Detalhes do Produto | Adega Bom Sabor</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <!-- CABEÇALHO -->
+
+    <header class="topo">
+
+        <div class="marca">ABS</div>
+
+        <div>
+            <p class="sobretitulo">SISTEMA DE APOIO À DECISÃO</p>
+            <h1>Adega Bom Sabor</h1>
+            <p class="subtitulo">Análise individual de produto</p>
+        </div>
+
+    </header>
+
+
+    <main class="container">
+
+        <!-- NAVEGAÇÃO -->
+
+        <p>
+            <a href="{{ url_for('index') }}"
+               style="color: #5a1832; font-weight: bold;">
+                ← Voltar ao dashboard
+            </a>
+        </p>
+
+
+        <!-- IDENTIFICAÇÃO -->
+
+        <section class="boas-vindas">
+
+            <span class="etiqueta">ANÁLISE INDIVIDUAL</span>
+
+            <h2>{{ produto.nome_produto }}</h2>
+
+            <p>
+                Código do produto:
+                <strong>{{ produto.produto_id }}</strong>
+            </p>
+
+            <p>
+                Tipo:
+                <strong>{{ produto.tipo }}</strong>
+            </p>
+
+            <p>
+                Situação:
+                <strong>{{ produto.ativo }}</strong>
+            </p>
+
+            <p>
+                Perfil de decisão:
+                <strong>{{ produto.perfil_decisao }}</strong>
+            </p>
+
+        </section>
+
+
+        <!-- PONTUAÇÃO PRINCIPAL -->
+
+        <section class="painel">
+
+            <h2>Índice de prioridade de reposição</h2>
+
+            <div class="indicador">
+
+                <span>Pontuação calculada</span>
+
+                <strong>
+                    {{ "%.2f"|format(produto.pontuacao_prioridade|float) }}
+                    / 100
+                </strong>
+
+                <p>
+                    {{ produto.classificacao_prioridade }}
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- INDICADORES DE ESTOQUE -->
+
+        <section class="painel">
+
+            <h2>Indicadores de estoque</h2>
+
+            <div class="indicadores">
+
+                <article class="indicador">
+                    <span>Estoque atual</span>
+                    <strong>{{ produto.estoque_atual }}</strong>
+                </article>
+
+                <article class="indicador">
+                    <span>Estoque mínimo</span>
+                    <strong>{{ produto.estoque_minimo }}</strong>
+                </article>
+
+                <article class="indicador">
+                    <span>Estoque máximo</span>
+                    <strong>{{ produto.estoque_maximo }}</strong>
+                </article>
+
+                <article class="indicador">
+                    <span>Cobertura estimada</span>
+                    <strong>
+                        {% if produto.cobertura_dias != "" %}
+                            {{ "%.1f"|format(produto.cobertura_dias|float) }}
+                            dias
+                        {% else %}
+                            Não calculada
+                        {% endif %}
+                    </strong>
+                </article>
+
+                <article class="indicador">
+                    <span>Prazo de reposição</span>
+                    <strong>{{ produto.lead_time_dias }} dias</strong>
+                </article>
+
+                <article class="indicador">
+                    <span>Vendas nos últimos 90 dias</span>
+                    <strong>{{ produto.vendas_90d }}</strong>
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- INDICADORES COMERCIAIS -->
+
+        <section class="painel">
+
+            <h2>Desempenho comercial</h2>
+
+            <div class="indicadores">
+
+                <article class="indicador">
+                    <span>Vendas nos últimos 30 dias</span>
+                    <strong>{{ produto.vendas_30d }}</strong>
+                </article>
+
+                <article class="indicador">
+                    <span>Vendas nos 30 dias anteriores</span>
+                    <strong>{{ produto.vendas_30d_anteriores }}</strong>
+                </article>
+
+                <article class="indicador">
+                    <span>Tendência da demanda</span>
+                    <strong style="font-size: 1.15rem;">
+                        {{ produto.tendencia_demanda }}
+                    </strong>
+                </article>
+
+                <article class="indicador">
+                    <span>Margem de lucro</span>
+                    <strong>
+                        {{ "%.2f"|format(produto.margem_pct|float) }}%
+                    </strong>
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- COMPOSIÇÃO DA PONTUAÇÃO -->
+
+        <section class="painel">
+
+            <h2>Composição do índice de prioridade</h2>
+
+            <p>
+                A pontuação é formada por cinco critérios,
+                com pesos definidos na metodologia do SAD.
+            </p>
+
+            {% set criterios = [
+                ("Situação do estoque", produto.pontos_estoque, 25),
+                ("Cobertura versus prazo de reposição", produto.pontos_cobertura, 30),
+                ("Volume de vendas", produto.pontos_vendas, 20),
+                ("Tendência da demanda", produto.pontos_tendencia, 15),
+                ("Margem de lucro", produto.pontos_margem, 10)
+            ] %}
+
+            {% for nome, pontos, maximo in criterios %}
+
+                <div style="margin: 22px 0;">
+
+                    <div style="
+                        display: flex;
+                        justify-content: space-between;
+                        gap: 12px;
+                        margin-bottom: 7px;
+                    ">
+
+                        <strong>{{ nome }}</strong>
+
+                        <span>
+                            {{ "%.2f"|format(pontos|float) }}
+                            / {{ maximo }}
+                        </span>
+
+                    </div>
+
+                    <div style="
+                        height: 12px;
+                        background: #eee7ea;
+                        border-radius: 20px;
+                        overflow: hidden;
+                    ">
+
+                        <div style="
+                            height: 100%;
+                            width: {{ (pontos|float / maximo * 100)|round(2) }}%;
+                            background: #c9a45c;
+                            border-radius: 20px;
+                        "></div>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </section>
+
+
+<!-- DECISÃO DO SAD -->
+
+<section class="painel">
+
+    <h2>Recomendação do sistema</h2>
+
+    <div class="aviso">
+
+        <h3 style="color: #5a1832;">
+            {{ produto.perfil_decisao }}
+        </h3>
+
+        <p>
+            <strong>Classificação de prioridade:</strong>
+            {{ produto.classificacao_prioridade }}
+        </p>
+
+        <p>
+            <strong>Pontuação:</strong>
+            {{ "%.2f"|format(produto.pontuacao_prioridade|float) }}
+            / 100
+        </p>
+
+        <p>
+            <strong>Recomendação:</strong>
+            {{ produto.recomendacao_detalhada }}
+        </p>
+
+        <p>
+            <strong>Justificativa da pontuação:</strong>
+            {{ produto.justificativa_prioridade }}
+        </p>
+
+        <hr>
+
+        <h3 style="color: #5a1832;">
+            Justificativa detalhada da recomendação
+        </h3>
+
+        <p>
+            {{ produto.justificativa_recomendacao }}
+        </p>
+
+        <p>
+            <strong>Risco de ruptura:</strong>
+            {{ produto.risco_ruptura }}
+        </p>
+
+    </div>
+
+</section>
+
+
+
+        <!-- OBSERVAÇÃO METODOLÓGICA -->
+
+        <section class="aviso">
+
+            <strong>Nota metodológica:</strong>
+
+            <p>
+                A análise utiliza dados de vendas com referência em
+                15/08/2026. A cobertura de estoque é uma estimativa
+                baseada na média de vendas dos últimos 90 dias.
+                A pontuação representa um apoio à decisão e não
+                constitui uma ordem automática de compra.
+            </p>
+
+        </section>
+
+    </main>
+
+
+    <footer class="rodape-profissional">
+        <div class="rodape-conteudo">
+         <h3>Adega Bom Sabor</h3>
+         <p>Sistema de Apoio à Decisão • Gestão Inteligente de Estoque</p>
+        </div>
+
+        <div class="rodape-direitos">
+            © 2026 Adega Bom Sabor. Todos os direitos reservados.
+        </div>
+    </footer>
+
+
+</body>
+</html>

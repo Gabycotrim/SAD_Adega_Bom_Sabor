@@ -1,5 +1,6 @@
 # Ambiente virtual e Python
 .venv/
+.venv_teste/
 venv/
 __pycache__/
 *.py[cod]
@@ -15,3 +16,6 @@ data/processed/*
 
 # Logs
 *.log
+
+# Cópias de segurança locais
+* copy.css
